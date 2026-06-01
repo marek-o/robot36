@@ -44,7 +44,7 @@ public class HFFax extends BaseMode {
 
 	@Override
 	public int getWidth() {
-		return 640;
+		return 1808;
 	}
 
 	@Override
