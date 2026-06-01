@@ -20,6 +20,11 @@ public class HFFax extends BaseMode {
 	private final int sampleRate;
 	private final float[] cumulated;
 	private int horizontalShift = 0;
+	private boolean shouldSaveImageFlag = false;
+
+	private int lastStoreLines = 0;
+	private int lastStartLines = Integer.MIN_VALUE;
+	private int totalLines = 0;
 
 	HFFax(int sampleRate) {
 		this.name = "HF Fax";
@@ -105,14 +110,51 @@ public class HFFax extends BaseMode {
 		lowPassFilter.reset();
 		for (int i = scanLineSamples - 1; i >= 0; --i)
 			scratchBuffer[i] = freqToLevel(lowPassFilter.avg(scratchBuffer[i]), frequencyOffset);
+
+		float[] grays = new float[horizontalPixels];
+
 		for (int i = 0; i < horizontalPixels; ++i) {
 			int position = (i * scanLineSamples) / horizontalPixels;
 			int color = ColorConverter.GRAY(scratchBuffer[position]);
+			float gray = Color.luminance(color);
 			pixelBuffer.pixels[i] = color;
+			grays[i] = gray;
 
 			//accumulate recent values, forget old
 			float decay = 0.99f;
-			cumulated[i] = cumulated[i] * decay + Color.luminance(color) * (1 - decay);
+			cumulated[i] = cumulated[i] * decay + gray * (1 - decay);
+		}
+
+		totalLines++;
+
+		boolean shouldSave = false;
+
+		final float threshold = 0.08f;
+
+		//start/stop tone length: 5 seconds -> 10 lines
+		//start tone: 300Hz -> 150 per line
+		if (DFT(grays, 150).abs() / getWidth() > threshold) {
+			lastStartLines = totalLines;
+		}
+
+		//stop tone: 450Hz -> 225 per line
+		if (DFT(grays, 225).abs() / getWidth() > threshold) {
+			shouldSave = true;
+
+			//forget about last start, no need to save again
+			lastStartLines = Integer.MIN_VALUE;
+		}
+
+		//save if one screen after start and no marker found (some images are larger than one screen so it can happen even with strong signal)
+		//1280 is a bit too small for 11 minute images, but there is a margin at the start which can be skipped
+		if (totalLines - lastStartLines == 1280 + 128) shouldSave = true;
+
+		//save if two screens after start and no marker
+		if (totalLines - lastStartLines == 1280 + 128 + 1280) shouldSave = true;
+
+		if (shouldSave && (totalLines - lastStoreLines) > 20) {
+			shouldSaveImageFlag = true;
+			lastStoreLines = totalLines;
 		}
 
 		//try to detect "sync": thick white margin
@@ -133,5 +175,24 @@ public class HFFax extends BaseMode {
 		pixelBuffer.width = horizontalPixels;
 		pixelBuffer.height = 1;
 		return true;
+	}
+
+	public boolean shouldSaveImage() {
+		if (shouldSaveImageFlag) {
+			shouldSaveImageFlag = false;
+			return true;
+		}
+
+		return false;
+	}
+
+	private Complex DFT(float[] input, int bin) {
+		Complex result = new Complex();
+		for (int i = 0; i < input.length; ++i) {
+			float oscR = (float)Math.sin(i * 2 * Math.PI * bin / input.length);
+			float oscI = (float)Math.cos(i * 2 * Math.PI * bin / input.length);
+			result = result.add(new Complex(oscR * input[i], oscI * input[i]));
+		}
+		return result;
 	}
 }

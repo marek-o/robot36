@@ -152,6 +152,13 @@ public class MainActivity extends AppCompatActivity {
 				processImage();
 				setStatus(decoder.currentMode.getName());
 			}
+
+			if (decoder.currentMode.getName().equals("HF Fax")) {
+				HFFax fax = (HFFax) decoder.currentMode;
+				if (fax.shouldSaveImage()) {
+					storeScope();
+				}
+			}
 		}
 	};
 
