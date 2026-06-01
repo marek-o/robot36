@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
 		int sampleSize = audioFormat == AudioFormat.ENCODING_PCM_FLOAT ? 4 : 2;
 		int frameSize = sampleSize * channelCount;
 		int readsPerSecond = 50;
-		int bufferSize = Integer.highestOneBit(recordRate) * frameSize;
+		int bufferSize = Integer.highestOneBit(recordRate) * frameSize * 10;
 		int frameCount = recordRate / readsPerSecond;
 		int bufferCount = frameCount * channelCount;
 		recordBuffer = new float[bufferCount];
