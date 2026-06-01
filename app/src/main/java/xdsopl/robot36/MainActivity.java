@@ -157,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
 				HFFax fax = (HFFax) decoder.currentMode;
 				if (fax.shouldSaveImage()) {
 					storeScope();
+					TextView infoText = findViewById(R.id.info_text);
+					infoText.setText(String.format("Saved at %s", new Date()));
 				}
 			}
 		}

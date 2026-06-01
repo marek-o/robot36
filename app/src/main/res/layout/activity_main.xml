@@ -8,6 +8,16 @@
 	android:keepScreenOn="true"
 	tools:context=".MainActivity">
 
+	<TextView
+		android:id="@+id/info_text"
+		android:layout_width="match_parent"
+		android:layout_height="64dp"
+		android:background="@color/thin"
+		app:layout_constraintBottom_toTopOf="@+id/scope"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent" />
+
 	<ImageView
 		android:id="@+id/scope"
 		android:layout_width="0dp"
@@ -16,7 +26,7 @@
 		app:layout_constraintBottom_toTopOf="@+id/waterfall_plot"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toTopOf="parent" />
+		app:layout_constraintTop_toBottomOf="@id/info_text" />
 
 	<ImageView
 		android:id="@+id/waterfall_plot"
